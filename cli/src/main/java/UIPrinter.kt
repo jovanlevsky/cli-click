@@ -6,34 +6,86 @@ import com.googlecode.lanterna.screen.TerminalScreen
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory
 import com.googlecode.lanterna.input.KeyType
 import com.googlecode.lanterna.screen.Screen
+import com.googlecode.lanterna.graphics.TextGraphics
 import kotlinx.coroutines.*
 import org.w3c.dom.Text
+import java.math.RoundingMode
+
 class UIPrinter {
+    // Word-wraps a single line so no wrapped piece exceeds maxWidth columns. Words longer
+    // than maxWidth on their own get hard-broken so they can't blow past the terminal edge.
+    private fun wrapLine(text: String, maxWidth: Int): List<String> {
+        if (maxWidth <= 0 || text.length <= maxWidth) return listOf(text)
+        val words = text.split(" ")
+        val wrapped = mutableListOf<String>()
+        var current = StringBuilder()
+        for (word in words) {
+            val candidateLength = if (current.isEmpty()) word.length else current.length + 1 + word.length
+            if (candidateLength <= maxWidth) {
+                if (current.isNotEmpty()) current.append(" ")
+                current.append(word)
+            } else {
+                if (current.isNotEmpty()) wrapped.add(current.toString())
+                current = StringBuilder(word)
+                while (current.length > maxWidth) {
+                    wrapped.add(current.substring(0, maxWidth))
+                    current = StringBuilder(current.substring(maxWidth))
+                }
+            }
+        }
+        if (current.isNotEmpty()) wrapped.add(current.toString())
+        return wrapped
+    }
+
+    // Draws a box around contentLines, sized to fit the longest line (wrapped to fit within
+    // maxContentWidth if given), bordered with "|" on the sides and "+--+" on the top/bottom.
+    // Returns the total height (rows) and width (columns) consumed.
+    private fun drawBox(
+        graphics: TextGraphics,
+        x: Int,
+        y: Int,
+        contentLines: List<String>,
+        maxContentWidth: Int = Int.MAX_VALUE
+    ): Pair<Int, Int> {
+        val wrapped = contentLines.flatMap { wrapLine(it, maxContentWidth) }
+        val contentWidth = if (wrapped.isEmpty()) 0 else wrapped.maxOf { it.length }
+        val border = "+" + "-".repeat(contentWidth + 2) + "+"
+        graphics.putString(x, y, border)
+        wrapped.forEachIndexed { i, line ->
+            graphics.putString(x, y + 1 + i, "| " + line.padEnd(contentWidth) + " |")
+        }
+        graphics.putString(x, y + 1 + wrapped.size, border)
+        return Pair(wrapped.size + 2, contentWidth + 4)
+    }
+
     fun printUI(screen: Screen, player: Player, selectedIndex: Int, actions: List<String>) {
         val stats = player.game.stats
         screen.clear()
         val graphics = screen.newTextGraphics()
-//        graphics.backgroundColor = TextColor.RGB(0, 86, 150)
         graphics.foregroundColor = TextColor.ANSI.WHITE
         graphics.putString(0, 0, "${player.name}'s game")
-        graphics.putString(0, 1, "+--------------------------------+")
-        graphics.putString(0, 2, " Blah: ${stats.blah.toInt()} ")
-        graphics.putString(0, 3, " BPS: ${stats.blahPS}              ")
-        graphics.putString(0, 4, " Blah per click: ${stats.blahPA}     ")
-        graphics.putString(0, 5, " Multiplier: ${stats.multiplier}   ")
-        graphics.putString(0, 6, "+--------------------------------+")
+
+        val maxContentWidth = screen.terminalSize.columns - 4
+        val statLines = listOf(
+            "Blah: ${stats.blah.toBigDecimal().setScale(3, RoundingMode.HALF_UP)}",
+            "BPS: ${stats.blahPS.toBigDecimal().setScale(3, RoundingMode.HALF_UP)}",
+            "Blah per click: ${stats.blahPA}",
+            "Multiplier: ${stats.multiplier}"
+        )
+        var y = 1
+        val (statsHeight, _) = drawBox(graphics, 0, y, statLines, maxContentWidth)
+        y += statsHeight
 
         var x = 0
-
         actions.forEachIndexed { index, action ->
-
             val text = if (index == selectedIndex) {
                 "[ $action ]"
             } else " $action "
-            graphics.putString(x, 7, text)
+            graphics.putString(x, y, text)
             x += text.length + 1
-
         }
+        y += 1
+
         var infoText = ""
         if (actions.get(selectedIndex).equals("Click")) {
             infoText = "Press Enter to Increment Blahs"
@@ -45,9 +97,8 @@ class UIPrinter {
             infoText += "Tier: " + player.allUpgrades.get(player.currUpgrade + 1).tier.toString() + "\n"
             infoText += "Type: " + player.allUpgrades.get(player.currUpgrade + 1).type
         }
-        else {infoText = ""}
-        infoText.split("\n").forEachIndexed { i, line ->
-            graphics.putString(0, 8 + i, line)
+        if (infoText.isNotEmpty()) {
+            drawBox(graphics, 0, y, infoText.split("\n"), maxContentWidth)
         }
         screen.refresh()
     }
@@ -58,14 +109,13 @@ class UIPrinter {
         graphics.putString(0, 0, "${player.name}'s buildings, and current blah is: ${player.game.stats.blah.toInt()}")
 
         val buildings = player.allBuildings
-        val linesPerBuilding = 7
         val headerRows = 1
+        val linesPerBuilding = 5 + 2
 
-        // How many full building blocks fit on screen at once.
         val terminalRows = screen.terminalSize.rows
         val visibleCount = maxOf(1, (terminalRows - headerRows) / linesPerBuilding)
+        val maxContentWidth = screen.terminalSize.columns - 4
 
-        // Keep the selected building scrolled into view.
         var scrollOffset = 0
         if (selectedIndex >= scrollOffset + visibleCount) scrollOffset = selectedIndex - visibleCount + 1
         if (selectedIndex < scrollOffset) scrollOffset = selectedIndex
@@ -75,27 +125,24 @@ class UIPrinter {
         val endIndex = minOf(buildings.size, scrollOffset + visibleCount)
         for (i in scrollOffset until endIndex) {
             val building = buildings.get(i)
-            val lines = listOf(
-                "+------------------------+",
+            val contentLines = listOf(
                 "${building.name} (x${building.num})",
-                "Cost: ${building.cost}",
+                "Cost: ${building.cost.toBigDecimal().setScale(3, RoundingMode.HALF_UP)}",
                 "BPS: ${building.amount}",
                 building.description,
-                "Tier: ${building.tier}",
-                "+------------------------+"
+                "Tier: ${building.tier}"
             )
-            val width = lines.maxOf { it.length }
-            lines.forEachIndexed { e, line ->
-                graphics.foregroundColor = TextColor.ANSI.WHITE
-                graphics.putString(0, y + e, line)
-                if (i == selectedIndex) {
-                    graphics.foregroundColor = TextColor.ANSI.BLUE
-                    graphics.putString(width + 1, y + e, "|")
+            graphics.foregroundColor = TextColor.ANSI.WHITE
+            val (height, boxWidth) = drawBox(graphics, 0, y, contentLines, maxContentWidth)
+            if (i == selectedIndex) {
+                graphics.foregroundColor = TextColor.ANSI.BLUE
+                for (row in 0 until height) {
+                    graphics.putString(boxWidth + 1, y + row, "|")
                 }
+                graphics.foregroundColor = TextColor.ANSI.WHITE
             }
-            y += lines.size
+            y += height
         }
-        graphics.foregroundColor = TextColor.ANSI.WHITE
         screen.refresh()
     }
     fun runBuildingsMenu(screen: Screen, player: Player): Menu {
