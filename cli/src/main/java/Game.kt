@@ -4,6 +4,7 @@ class Game {
     data class GameStats(
         var blah: Double = 0.0,
         var blahPS: Double = 0.0,
+        var baseBlahPS: Double = 0.0,
         var blahPA: Double = 1.0,
         var baseBlahPA: Double = 1.0,
         var upgrades: ArrayList<Upgrade> = arrayListOf(),
@@ -23,8 +24,10 @@ class Game {
         val name: String,
         val amount: Double,
         val tier: Int,
-        val cost: Double,
-        val description: String
+        var cost: Double,
+        val description: String,
+        val scaling: Double,
+        var num: Int
     )
 
     val stats = GameStats()
