@@ -7,12 +7,12 @@ import cliclick.model.Building
  * math match the original Player class one-to-one.
  */
 interface GameActions {
-    /** Manual click: blah += blahPA. */
+    /** Manual click: inputs += inputsPA. */
     fun increment()
-    /** Buy the next upgrade if affordable (flat -> baseBlahPA, mult -> multiplier). */
+    /** Buy the next upgrade if affordable (flat -> baseInputsPA, mult -> multiplier). */
     fun upgrade()
-    /** Buy one building if affordable; scales its cost and raises baseBlahPS. */
+    /** Buy one building if affordable; scales its cost and raises baseInputsPS. */
     fun buyBuilding(building: Building)
-    /** Passive income: blah += blahPS * deltaSeconds; timePlayed += deltaSeconds. */
+    /** Passive income: inputs += inputsPS * deltaSeconds; timePlayed += deltaSeconds. */
     fun tick(deltaSeconds: Double)
 }

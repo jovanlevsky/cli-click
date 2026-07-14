@@ -52,12 +52,12 @@ class GameMenu(
         window.setHints(listOf(Window.Hint.CENTERED))
 
         // --- Stats box (centered) ---
-        val blahLabel = Label("")
-        val bpsLabel = Label("")
-        val bpcLabel = Label("")
+        val inputsLabel = Label("")
+        val ipsLabel = Label("")
+        val ipcLabel = Label("")
         val multLabel = Label("")
         val statsPanel = Panel(LinearLayout(Direction.VERTICAL))
-        listOf(blahLabel, bpsLabel, bpcLabel, multLabel).forEach {
+        listOf(inputsLabel, ipsLabel, ipcLabel, multLabel).forEach {
             statsPanel.addComponent(it, LinearLayout.createLayoutData(LinearLayout.Alignment.Center))
         }
 
@@ -85,16 +85,16 @@ class GameMenu(
         actionsPanel.addComponent(buildingsButton)
 
         fun detailsFor(focused: Interactable?): String = when (focused) {
-            clickButton -> "Press Enter to Increment Blahs"
+            clickButton -> "Press Enter to Increment Inputs"
             upgradeButton -> nextUpgradeText()
             buildingsButton -> "Press Enter to open the buildings menu"
             else -> ""
         }
 
         refreshGame = {
-            blahLabel.text = "Blah: ${Numbers.fmt(stats.blah)}"
-            bpsLabel.text = "BPS: ${Numbers.fmt(stats.blahPS)}"
-            bpcLabel.text = "Blah per click: ${stats.blahPA}"
+            inputsLabel.text = "Inputs: ${Numbers.fmt(stats.inputs)}"
+            ipsLabel.text = "IPS: ${Numbers.fmt(stats.inputsPS)}"
+            ipcLabel.text = "Inputs per click: ${stats.inputsPA}"
             multLabel.text = "Multiplier: ${stats.multiplier}"
             detailsLabel.text = detailsFor(window.focusedInteractable)
         }

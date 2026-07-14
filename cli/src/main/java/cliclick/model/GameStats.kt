@@ -6,11 +6,11 @@ package cliclick.model
  * them lives in cliclick.engine.GameEngine.)
  */
 data class GameStats(
-    var blah: Double = 0.0,
-    var blahPS: Double = 0.0,
-    var baseBlahPS: Double = 0.0,
-    var blahPA: Double = 1.0,
-    var baseBlahPA: Double = 1.0,
+    var inputs: Double = 0.0,
+    var inputsPS: Double = 0.0,
+    var baseInputsPS: Double = 0.0,
+    var inputsPA: Double = 1.0,
+    var baseInputsPA: Double = 1.0,
     var highestTier: Int = 1,
     var multiplier: Double = 1.0,
     var timePlayed: Double = 0.0

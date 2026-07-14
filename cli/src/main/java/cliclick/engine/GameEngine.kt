@@ -22,37 +22,37 @@ class GameEngine(repository: ContentRepository) : GameQueries, GameActions {
         get() = allUpgrades.getOrNull(currentUpgradeIndex + 1)
 
     override fun increment() {
-        stats.blah += stats.blahPA
+        stats.inputs += stats.inputsPA
     }
 
     override fun upgrade() {
         val next = nextUpgrade ?: return
-        if (stats.blah >= next.cost) {
+        if (stats.inputs >= next.cost) {
             currentUpgradeIndex += 1
             if (next.type == "flat") {
-                stats.baseBlahPA += next.amount
+                stats.baseInputsPA += next.amount
             }
             if (next.type == "mult") {
                 stats.multiplier *= next.amount
             }
-            stats.blahPA = stats.baseBlahPA * stats.multiplier
-            stats.blahPS = stats.baseBlahPS * stats.multiplier
-            stats.blah -= next.cost
+            stats.inputsPA = stats.baseInputsPA * stats.multiplier
+            stats.inputsPS = stats.baseInputsPS * stats.multiplier
+            stats.inputs -= next.cost
         }
     }
 
     override fun buyBuilding(building: Building) {
-        if (stats.blah >= building.cost) {
-            stats.blah -= building.cost
+        if (stats.inputs >= building.cost) {
+            stats.inputs -= building.cost
             building.num += 1
             building.cost *= building.scaling
-            stats.baseBlahPS += building.amount
-            stats.blahPS = stats.baseBlahPS * stats.multiplier
+            stats.baseInputsPS += building.amount
+            stats.inputsPS = stats.baseInputsPS * stats.multiplier
         }
     }
 
     override fun tick(deltaSeconds: Double) {
-        stats.blah += stats.blahPS * deltaSeconds
+        stats.inputs += stats.inputsPS * deltaSeconds
         stats.timePlayed += deltaSeconds
     }
 }

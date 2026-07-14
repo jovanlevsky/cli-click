@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  *
  * An ActionListBox provides Up/Down navigation, focus highlighting, and native
  * scrolling when the list outgrows its viewport; a Details panel below shows
- * the full info (name+count, cost, BPS, description, tier) for the selected
+ * the full info (name+count, cost, IPS, description, tier) for the selected
  * entry. List rows are objects whose toString() reads live building state, so
  * counts and costs redraw fresh on every tick without rebuilding the list.
  * Enter buys the selected building, "Return" or Escape closes the window.
@@ -65,13 +65,13 @@ class BuildingsMenu(
         })
 
         val refreshBuildings = {
-            headerLabel.text = "Current blah: ${game.stats.blah.toInt()}"
+            headerLabel.text = "Current inputs: ${game.stats.inputs.toInt()}"
             val selected = listBox.selectedItem
             detailsLabel.text = if (selected is BuildingItem) {
                 val b = selected.building
                 "${b.name} (x${b.num})\n" +
                     "Cost: ${Numbers.fmt(b.cost)}\n" +
-                    "BPS: ${b.amount}\n" +
+                    "IPS: ${b.amount}\n" +
                     b.description + "\n" +
                     "Tier: ${b.tier}"
             } else {
