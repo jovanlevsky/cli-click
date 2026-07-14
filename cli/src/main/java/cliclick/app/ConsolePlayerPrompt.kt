@@ -9,7 +9,6 @@ class ConsolePlayerPrompt {
         println("Enter your name: ")
         val name = scanner.nextLine()
         println("Welcome, $name! Game starting in a second......")
-        Thread.sleep(200)
         return name
     }
 }

@@ -3,11 +3,6 @@ package cliclick.data
 import cliclick.model.Building
 import cliclick.model.Upgrade
 
-/**
- * Loads content from the columnar txt files bundled on the classpath
- * (upgradeutils/*, buildingutils/*), one value per line, matched by index.
- * File formats are unchanged from the original Player.init()/init2().
- */
 class ResourceContentRepository : ContentRepository {
 
     private fun readLines(path: String): List<String> {
